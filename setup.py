@@ -10,7 +10,7 @@ setup(
     description='A context custom logger with thread-local storage and context propagation for Python applications.',
     long_description=open('README.MD').read(),
     long_description_content_type='text/markdown',
-    url='',
+    url='https://github.com/RajeshKumar1490/py-context-logger',
     author='Rajesh Ganjikunta',
     author_email='rajeshkumarganjikunta90@gmail.com',
     classifiers=[

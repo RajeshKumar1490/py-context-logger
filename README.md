@@ -8,6 +8,7 @@ A python context logger with thread-local storage and context propagation for Py
 - Dynamic updating of log context based on function parameters.
 - Propagation of log context across threads.
 - Decorators to easily integrate the logger into functions and classes.
+- Add requestId by default to track the request if not provided.
 
 ## Installation
 

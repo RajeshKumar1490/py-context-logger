@@ -2,13 +2,13 @@ from setuptools import setup, find_packages
 
 setup(
     name='py_context_logger',
-    version='1.0.4',
+    version='1.0.5',
     packages=find_packages(),
     include_package_data=True,
     install_requires=[],
     license='MIT',
-    description='A context custom logger with thread-local storage and context propagation for Python applications.',
-    long_description=open('README.MD').read(),
+    description='A python context logger with thread-local storage and context propagation for Python applications.',
+    long_description=open('README.md').read(),
     long_description_content_type='text/markdown',
     url='https://github.com/RajeshKumar1490/py-context-logger',
     author='Rajesh Ganjikunta',

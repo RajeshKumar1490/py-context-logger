@@ -8,7 +8,8 @@ A python context logger with thread-local storage and context propagation for Py
 - Dynamic updating of log context based on function parameters.
 - Propagation of log context across threads.
 - Decorators to easily integrate the logger into functions and classes.
-- Add requestId by default to track the request if not provided.
+- Add requestId by default to track the request if not provided. 
+- Provides flexibility to configure logger name, log level, log format at the time of ContextLogger initialization.
 
 ## Installation
 
@@ -19,13 +20,15 @@ pip install py-context-logger
 ## Usage
 ```python
 # Initialization
-from context_logger import initialize_context_logger
+from context_logger import ContextLogger
 
 from flask import Flask, request
 from context_logger import UseContextLogger, ClearLogContext
 
 app = Flask(__name__)
-initialize_context_logger()
+context_logger = ContextLogger()
+# Also, we can configure name, log_format, level while instantiating ContextLogger
+context_logger.initialize_context_logger()
 
 @app.route('/some-endpoint', methods=['POST'])
 @UseContextLogger({
@@ -36,14 +39,13 @@ initialize_context_logger()
 })
 @ClearLogContext()
 def some_endpoint(resource_name: str, resource_id: str, headers: dict, logger=None):
-    data = request.get_json()
     logger.info("Processing request")
+    data = request.get_json()
+    sample_class = SampleClass()
+    user_name, company_name = "Sample user", "Sample company"
+    sample_class.method_one(user_name=user_name, user_company=company_name)
     return {"status": "success"}
 
-if __name__ == '__main__':
-    app.run(debug=True)
-
-    
 
 # Class-Level Logging
 from context_logger import UseContextLogger
@@ -53,27 +55,24 @@ class SampleClass:
     def __init__(self, logger=None):
         self.logger = logger
 
-    def method_one(self, param1):
-        self.logger.info(f"Processing method_one with param1: {param1}")
+    @UseContextLogger({"user_name": "user_name"})
+    def method_one(self, user_name: str, user_company: str, logger=None):
+        self.logger.info(f"Processing method_one with user")
+        self.method_two(user_company=user_company)
 
-    def method_two(self, param2):
-        self.logger.info(f"Processing method_two with param2: {param2}")
+    def method_two(self, user_company: str):
+        self.logger.info(f"Processing method_two with company: {user_company}")
 
-        
-        
-# Method-Level Logging will override the class level
-from context_logger import UseContextLogger
 
-@UseContextLogger({
-    'param1': 'param1_key',
-    'param2': 'param2_key'
-})
-def some_method(param1, param2, logger=None):
-    logger.info('Processing some method')
+if __name__ == '__main__':
+    app.run(debug=True)
+
 ```
 ## Sample Log Format
 ```python
-2024-07-16 16:20:54,197 - main.py:79 - INFO - {'requestId': '6239237f-1f96-48c6-93f3-89fd2c63ea6d', 'id': '123', 'name': 'sample name', 'requestedMail': 'sample-user@gmail.com'} - Request received for fetching resources
+2024-07-16 16:20:54,197 - main.py:79 - INFO - {'name': 'sample_resource', 'id': '123', 'requestId': '6239237f-1f96-48c6-93f3-89fd2c63ea6d', 'requestedMail': 'sample-user@gmail.com'} - Processing request
+2024-07-16 16:20:54,198 - main.py:79 - INFO - {'name': 'sample_resource', 'id': '123', 'requestId': '6239237f-1f96-48c6-93f3-89fd2c63ea6d', 'requestedMail': 'sample-user@gmail.com', 'user_name': 'Sample user'} - Processing method_one with user
+2024-07-16 16:20:54,199 - main.py:79 - INFO - {'name': 'sample_resource', 'id': '123', 'requestId': '6239237f-1f96-48c6-93f3-89fd2c63ea6d', 'requestedMail': 'sample-user@gmail.com', 'user_name': 'Sample user'} - Processing method_two with company: Sample company
 ```
 
 

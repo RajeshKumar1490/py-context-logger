@@ -14,6 +14,7 @@ class ContextThread(threading.Thread):
         :param kwargs: dict - The keyword arguments for the thread.
         """
         from .context_logger import logger
+
         self.log_context = logger.get_log_context()
         super().__init__(*args, **kwargs)
 
@@ -22,5 +23,6 @@ class ContextThread(threading.Thread):
         Updates the log context in the new thread before running.
         """
         from .context_logger import logger
+
         logger.update_log_context(self.log_context)
         super().run()

@@ -4,6 +4,9 @@ import uuid
 from .context_threading import ContextThread
 
 logger = None
+_DEFAULT_LOGGER_NAME = "context_logger"
+_DEFAULT_LOG_FORMAT = "%(asctime)s - %(filename)s:%(lineno)d - %(levelname)s - %(log_context)s - %(message)s"
+_DEFAULT_LOG_LEVEL = logging.INFO
 
 
 class ContextLogger(logging.Logger):
@@ -11,7 +14,12 @@ class ContextLogger(logging.Logger):
     A custom logger class that extends the functionality of the standard logging.Logger class.
     """
 
-    def __init__(self, name):
+    def __init__(
+        self,
+        name: str = _DEFAULT_LOGGER_NAME,
+        log_format: str = _DEFAULT_LOG_FORMAT,
+        level: str = _DEFAULT_LOG_LEVEL,
+    ):
         """
         Initializes the custom logger with a name and sets up thread-local storage for log context.
 
@@ -20,6 +28,26 @@ class ContextLogger(logging.Logger):
         super().__init__(name)
         self.local = threading.local()
         self.local.log_context = {}
+        self.name = name
+        self.log_format = log_format
+        self.level = level
+
+    def initialize_context_logger(self):
+        """
+        Initializes the custom logger with the specified log level.
+
+        :param level: str - The log level for the logger.
+        """
+        global logger
+        logging.setLoggerClass(ContextLogger)
+        logger = logging.getLogger(self.name)
+        handler = logging.StreamHandler()
+        formatter = logging.Formatter(self.log_format)
+        handler.setFormatter(formatter)
+        logger.addHandler(handler)
+        logger.setLevel(self.level)
+        logger.propagate = False
+        threading.Thread = ContextThread
 
     def set_log_context(self, key, value):
         """
@@ -72,23 +100,3 @@ class ContextLogger(logging.Logger):
             self.local.log_context["requestId"] = str(uuid.uuid4())
         record.log_context = f"{self.local.log_context}"
         return record
-
-
-def initialize_context_logger(level: str = logging.INFO):
-    """
-    Initializes the custom logger with the specified log level.
-
-    :param level: str - The log level for the logger.
-    """
-    global logger
-    logging.setLoggerClass(ContextLogger)
-    logger = logging.getLogger("custom_logger")
-    handler = logging.StreamHandler()
-    formatter = logging.Formatter(
-        "%(asctime)s - %(filename)s:%(lineno)d - %(levelname)s - %(log_context)s - %(message)s"
-    )
-    handler.setFormatter(formatter)
-    logger.addHandler(handler)
-    logger.setLevel(level)
-    logger.propagate = False
-    threading.Thread = ContextThread

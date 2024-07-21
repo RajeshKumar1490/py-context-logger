@@ -1,3 +1,3 @@
-from .context_logger import ContextLogger, initialize_context_logger
+from .context_logger import ContextLogger
 from .decorators import UseContextLogger, ClearLogContext
 from .context_threading import ContextThread

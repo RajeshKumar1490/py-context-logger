@@ -1,6 +1,5 @@
 import functools
 from inspect import signature, isfunction
-import logging
 import threading
 
 
@@ -79,7 +78,7 @@ class UseContextLogger:
 
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
-            logger = logging.getLogger("custom_logger")
+            from .context_logger import logger
 
             # Retrieve function signature and arguments
             sig = signature(func)
@@ -116,7 +115,7 @@ class UseContextLogger:
 
         @functools.wraps(cls)
         def wrapper(*args, **kwargs):
-            logger = logging.getLogger("custom_logger")
+            from .context_logger import logger
 
             # Retrieve function signature and arguments
             sig = signature(cls)
@@ -154,7 +153,8 @@ class UseContextLogger:
 
         @functools.wraps(target)
         def wrapped(*args, **kwargs):
-            logger = logging.getLogger("custom_logger")
+            from .context_logger import logger
+
             logger.update_log_context(context)
             return target(*args, **kwargs)
 
@@ -185,7 +185,7 @@ class ClearLogContext:
 
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
-            logger = logging.getLogger("custom_logger")
+            from .context_logger import logger
 
             # Clear the log context
             logger.clear_log_context()

@@ -10,6 +10,7 @@ A python context logger with thread-local storage and context propagation for Py
 - Decorators to easily integrate the logger into functions and classes.
 - Add requestId by default to track the request if not provided. 
 - Provides flexibility to configure logger name, log level, log format at the time of ContextLogger initialization.
+- Method to get a log property value at any point of the request to pass across services.
 
 ## Installation
 
@@ -62,6 +63,12 @@ class SampleClass:
 
     def method_two(self, user_company: str):
         self.logger.info(f"Processing method_two with company: {user_company}")
+    
+    # Sample method to fetch the transactionId/requestId to share across services
+    def method_three(self, user_company: str):
+        self.logger.info(f"Processing method_three with company: {user_company}")
+        requestId = self.logger.get_property_value(log_property="requestId")
+        # We can pass this requestId while make API calls or pushing to kafka etc.
 
 
 if __name__ == '__main__':
@@ -73,6 +80,7 @@ if __name__ == '__main__':
 2024-07-16 16:20:54,197 - main.py:79 - INFO - {'name': 'sample_resource', 'id': '123', 'requestId': '6239237f-1f96-48c6-93f3-89fd2c63ea6d', 'requestedMail': 'sample-user@gmail.com'} - Processing request
 2024-07-16 16:20:54,198 - main.py:79 - INFO - {'name': 'sample_resource', 'id': '123', 'requestId': '6239237f-1f96-48c6-93f3-89fd2c63ea6d', 'requestedMail': 'sample-user@gmail.com', 'user_name': 'Sample user'} - Processing method_one with user
 2024-07-16 16:20:54,199 - main.py:79 - INFO - {'name': 'sample_resource', 'id': '123', 'requestId': '6239237f-1f96-48c6-93f3-89fd2c63ea6d', 'requestedMail': 'sample-user@gmail.com', 'user_name': 'Sample user'} - Processing method_two with company: Sample company
+2024-07-16 16:20:55,000 - main.py:79 - INFO - {'name': 'sample_resource', 'id': '123', 'requestId': '6239237f-1f96-48c6-93f3-89fd2c63ea6d', 'requestedMail': 'sample-user@gmail.com', 'user_name': 'Sample user'} - Processing method_three with company: Sample company
 ```
 
 

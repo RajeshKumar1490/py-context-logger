@@ -100,3 +100,23 @@ class ContextLogger(logging.Logger):
             self.local.log_context["requestId"] = str(uuid.uuid4())
         record.log_context = f"{self.local.log_context}"
         return record
+
+    def get_property_value(self, log_property: str) -> str:
+        """
+        Retrieve the value associated with a given parameter from the logging context.
+
+        This method checks if a logging context is available. If it is, the method
+        attempts to retrieve the value for the specified parameter. If no value is
+        found, an empty string is returned.
+
+        Args:
+            log_property (str): The name of the log property to retrieve from the logging context.
+
+        Returns:
+            str: The value associated with the specified parameter. Returns an empty
+            string if the parameter is not found or if the logging context is not available.
+        """
+        value = ""
+        if self.local.log_context:
+            value = self.local.log_context(log_property, "")
+        return value

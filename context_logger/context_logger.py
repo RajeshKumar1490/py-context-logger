@@ -118,5 +118,5 @@ class ContextLogger(logging.Logger):
         """
         value = ""
         if self.local.log_context:
-            value = self.local.log_context(log_property, "")
+            value = self.local.log_context.get(log_property, "")
         return value

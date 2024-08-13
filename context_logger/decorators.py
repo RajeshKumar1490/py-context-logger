@@ -187,10 +187,10 @@ class ClearLogContext:
         def wrapper(*args, **kwargs):
             from .context_logger import logger
 
+            result = func(*args, **kwargs)
+
             # Clear the log context
             logger.clear_log_context()
-
-            result = func(*args, **kwargs)
 
             return result
 

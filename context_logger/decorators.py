@@ -69,7 +69,7 @@ class UseContextLogger:
 
         log_constants = self.log_context.get("log_constants", {})
         for log_key, log_val in log_constants.items():
-            new_context[log_key] = bound_args.arguments[log_val]
+            new_context[log_key] = log_val
         logger.update_log_context(new_context)
 
     def decorate_function(self, func):

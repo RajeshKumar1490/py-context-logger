@@ -3,3 +3,6 @@ __pycache__/
 .DS_Store
 .idea/
 .vscode/
+build
+dist
+py_context_logger.egg-info

@@ -19,6 +19,7 @@ class ContextLogger(logging.Logger):
         name: str = _DEFAULT_LOGGER_NAME,
         log_format: str = _DEFAULT_LOG_FORMAT,
         level: str = _DEFAULT_LOG_LEVEL,
+        auto_request_id_generation: bool = True
     ):
         """
         Initializes the custom logger with a name and sets up thread-local storage for log context.
@@ -31,6 +32,7 @@ class ContextLogger(logging.Logger):
         self.name = name
         self.log_format = log_format
         self.level = level
+        self.auto_request_id_generation = auto_request_id_generation
 
     def initialize_context_logger(self):
         """
@@ -96,8 +98,8 @@ class ContextLogger(logging.Logger):
         record = super().makeRecord(*args, **kwargs)
         if not hasattr(self.local, "log_context"):
             self.local.log_context = {}
-        if self.local.log_context and "requestId" not in self.local.log_context:
-            self.local.log_context["requestId"] = str(uuid.uuid4())
+        if self.auto_request_id_generation and  self.local.log_context and "logRequestId" not in self.local.log_context:
+            self.local.log_context["logRequestId"] = str(uuid.uuid4())
         record.log_context = f"{self.local.log_context}"
         return record
 

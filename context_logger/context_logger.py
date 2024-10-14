@@ -98,7 +98,7 @@ class ContextLogger(logging.Logger):
         record = super().makeRecord(*args, **kwargs)
         if not hasattr(self.local, "log_context"):
             self.local.log_context = {}
-        if self.auto_request_id_generation and  self.local.log_context and "logRequestId" not in self.local.log_context:
+        if self.auto_request_id_generation and "logRequestId" not in self.local.log_context:
             self.local.log_context["logRequestId"] = str(uuid.uuid4())
         record.log_context = f"{self.local.log_context}"
         return record

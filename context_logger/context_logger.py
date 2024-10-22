@@ -1,6 +1,8 @@
 import logging
 import threading
 import uuid
+from typing import Dict
+
 from .context_threading import ContextThread
 
 logger = None
@@ -42,7 +44,7 @@ class ContextLogger(logging.Logger):
         """
         global logger
         logging.setLoggerClass(ContextLogger)
-        logger = logging.getLogger(self.name)
+        logger = self
         handler = logging.StreamHandler()
         formatter = logging.Formatter(self.log_format)
         handler.setFormatter(formatter)
@@ -50,6 +52,7 @@ class ContextLogger(logging.Logger):
         logger.setLevel(self.level)
         logger.propagate = False
         threading.Thread = ContextThread
+        return logger
 
     def set_log_context(self, key, value):
         """
@@ -61,6 +64,18 @@ class ContextLogger(logging.Logger):
         if not hasattr(self.local, "log_context"):
             self.local.log_context = {}
         self.local.log_context[key] = value
+
+    def set_bulk_log_context(self, key_value: Dict[str, str]):
+        """
+        Sets bulk key-value pairs in the log context.
+
+        :param key_value: Dict[str, str] - The key, value pair for the log context entries.
+        """
+        if not hasattr(self.local, "log_context"):
+            self.local.log_context = {}
+
+        for key, value in key_value.items():
+            self.local.log_context[key] = value
 
     def get_log_context(self):
         """

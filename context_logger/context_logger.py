@@ -1,8 +1,7 @@
 import logging
 import threading
 import uuid
-from typing import Dict
-
+from typing import Dict, Union
 from .context_threading import ContextThread
 
 logger = None
@@ -13,127 +12,126 @@ _DEFAULT_LOG_LEVEL = logging.INFO
 
 class ContextLogger(logging.Logger):
     """
-    A custom logger class that extends the functionality of the standard logging.Logger class.
+    A custom logger class that supports thread-local logging context and integrates with GCP logging if enabled.
     """
 
     def __init__(
         self,
         name: str = _DEFAULT_LOGGER_NAME,
         log_format: str = _DEFAULT_LOG_FORMAT,
-        level: str = _DEFAULT_LOG_LEVEL,
-        auto_request_id_generation: bool = True
+        level: Union[str, int] = _DEFAULT_LOG_LEVEL,
+        auto_request_id_generation: bool = False
     ):
         """
-        Initializes the custom logger with a name and sets up thread-local storage for log context.
+        Initialize the custom logger.
 
-        :param name: str - The name of the logger.
+        Args:
+            name (str): Name of the logger.
+            log_format (str): Format for log messages.
+            level Union[str, int]: Logging level (e.g., logging.INFO / 'INFO').
+            auto_request_id_generation (bool): Whether to auto-generate a request ID for each log.
         """
         super().__init__(name)
         self.local = threading.local()
         self.local.log_context = {}
-        self.name = name
         self.log_format = log_format
         self.level = level
         self.auto_request_id_generation = auto_request_id_generation
 
-    def initialize_context_logger(self):
+    def initialize_context_logger(self) -> "ContextLogger":
         """
-        Initializes the custom logger with the specified log level.
+        Initialize and configure the logger for use.
 
-        :param level: str - The log level for the logger.
+        Returns:
+            ContextLogger: The configured logger instance.
         """
         global logger
         logging.setLoggerClass(ContextLogger)
         logger = self
         handler = logging.StreamHandler()
-        formatter = logging.Formatter(self.log_format)
-        handler.setFormatter(formatter)
-        logger.addHandler(handler)
-        logger.setLevel(self.level)
-        logger.propagate = False
+        handler.setFormatter(logging.Formatter(self.log_format))
+        self.propagate = False
+        self.setLevel(self.level)
         threading.Thread = ContextThread
+
         return logger
 
-    def set_log_context(self, key, value):
+    def set_log_context(self, key: str, value: str) -> None:
         """
         Sets a key-value pair in the log context.
 
         :param key: str - The key for the log context entry.
         :param value: Any - The value for the log context entry.
         """
-        if not hasattr(self.local, "log_context"):
-            self.local.log_context = {}
+        self._ensure_log_context()
         self.local.log_context[key] = value
 
-    def set_bulk_log_context(self, key_value: Dict[str, str]):
+    def set_bulk_log_context(self, key_value: Dict[str, str]) -> None:
         """
-        Sets bulk key-value pairs in the log context.
+        Set multiple key-value pairs in the thread-local logging context.
 
         :param key_value: Dict[str, str] - The key, value pair for the log context entries.
         """
-        if not hasattr(self.local, "log_context"):
-            self.local.log_context = {}
+        self._ensure_log_context()
+        self.local.log_context.update(key_value)
 
-        for key, value in key_value.items():
-            self.local.log_context[key] = value
-
-    def get_log_context(self):
+    def get_log_context(self) -> Dict[str, str]:
         """
-        Retrieves a copy of the current log context.
+        Retrieve the current log context.
 
-        :return: dict - A copy of the log context.
+        Returns:
+            Dict[str, Any]: A copy of the current log context.
         """
-        if not hasattr(self.local, "log_context"):
-            self.local.log_context = {}
+        self._ensure_log_context()
         return self.local.log_context.copy()
 
-    def update_log_context(self, new_context):
+    def update_log_context(self, new_context: Dict[str, str]) -> None:
         """
-        Updates the log context with a new context.
+        Update the log context with new key-value pairs.
 
-        :param new_context: dict - The new context to be added to the log context.
+        Args:
+            new_context (Dict[str, Any]): New key-value pairs to add to the log context.
         """
-        if not hasattr(self.local, "log_context"):
-            self.local.log_context = {}
+        self._ensure_log_context()
         self.local.log_context.update(new_context)
 
-    def clear_log_context(self):
+    def clear_log_context(self) -> None:
         """
-        Clears the current log context.
+        Clear the thread-local logging context.
         """
         if hasattr(self.local, "log_context"):
             self.local.log_context = {}
 
-    def makeRecord(self, *args, **kwargs):
+    def makeRecord(self, *args, **kwargs) -> logging.LogRecord:
         """
         Creates a log record with the current log context.
 
         :return: LogRecord - The created log record.
         """
         record = super().makeRecord(*args, **kwargs)
-        if not hasattr(self.local, "log_context"):
-            self.local.log_context = {}
+        self._ensure_log_context()
         if self.auto_request_id_generation and "logRequestId" not in self.local.log_context:
             self.local.log_context["logRequestId"] = str(uuid.uuid4())
+
         record.log_context = f"{self.local.log_context}"
         return record
 
     def get_property_value(self, log_property: str) -> str:
         """
-        Retrieve the value associated with a given parameter from the logging context.
-
-        This method checks if a logging context is available. If it is, the method
-        attempts to retrieve the value for the specified parameter. If no value is
-        found, an empty string is returned.
+        Retrieve a specific property value from the logging context.
 
         Args:
-            log_property (str): The name of the log property to retrieve from the logging context.
+            log_property (str): The name of the property to retrieve.
 
         Returns:
-            str: The value associated with the specified parameter. Returns an empty
-            string if the parameter is not found or if the logging context is not available.
+            Optional[Any]: The value of the property, or None if not found.
         """
-        value = ""
-        if self.local.log_context:
-            value = self.local.log_context.get(log_property, "")
-        return value
+        self._ensure_log_context()
+        return self.local.log_context.get(log_property, "")
+
+    def _ensure_log_context(self) -> None:
+        """
+        Ensure that the log context is initialized for the current thread.
+        """
+        if self.local and not self.local.get("log_context"):
+            self.local.log_context = {}

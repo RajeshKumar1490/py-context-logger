@@ -8,7 +8,7 @@ A Python context logger using thread-local storage for log context propagation a
 - **Dynamic log context updating**: Automatically updates log context based on function parameters, enabling detailed logging.
 - **Log context propagation across threads**: Ensures log context consistency in multi-threaded environments.
 - **Decorators for easy integration**: Integrate logging into functions and classes using decorators for cleaner and more maintainable code.
-- **Optional `logRequestId` generation**: Automatically track request IDs unless explicitly disabled.
+- **Optional `logRequestId` generation**: Automatically track request IDs if explicitly enabled.
 - **Configurable logger**: Customize the logger name, level, and format during initialization.
 - **Constant key-value pairs**: Set log constants to ensure that specific key-value pairs are present in every log entry.
 - **Retrieve log property values**: Get specific log property values (e.g., `requestId`) to propagate across services.
@@ -41,7 +41,7 @@ Integrating the logger into a Flask application to automatically log request con
 
 ```python
 from flask import Flask, request
-from context_logger import UseContextLogger, ClearLogContext
+from context_logger import UseContextLogger, ClearLogContext, ContextLogger
 
 app = Flask(__name__)
 context_logger = ContextLogger()
